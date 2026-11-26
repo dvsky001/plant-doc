@@ -1,0 +1,22 @@
+name: unpack-icons
+on:
+  push:
+    branches: [gh-pages]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: unpack
+        run: |
+          if [ -f icons/icon-512.png ] || [ ! -f icons.tgz.b64 ]; then echo skip; exit 0; fi
+          base64 -d icons.tgz.b64 | tar xz
+          rm icons.tgz.b64
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m 'icons: unpack PNG'
+          git push
