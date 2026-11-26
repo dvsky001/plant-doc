@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Растениум — определитель растений по фото и план ухода</title>
+<meta name="description" content="Сфотографируйте комнатное растение или цветок: название, стадия, свет, полив, температура, влажность, почва, токсичность для кошек и собак и план ухода с напоминаниями. Без рекламы, работает офлайн.">
+<meta name="theme-color" content="#2E7D4F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Растениум">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="brand"><span class="logo">🌿</span><b>Растениум</b></div><div id="quota" class="quota"></div></header>
+<main id="app" aria-live="polite"></main>
+<nav class="nav" id="nav">
+  <button data-go="home"><span>📷</span>Определить</button>
+  <button data-go="mine"><span>🪴</span>Мои растения<i id="badge" hidden></i></button>
+  <button data-go="about"><span>⚙️</span>Ещё</button>
+</nav>
+<input id="fileCam" type="file" accept="image/*" capture="environment" hidden>
+<input id="fileGal" type="file" accept="image/*" hidden>
+<div id="toast" class="toast" hidden></div>
+<script src="config.js"></script>
+<script src="plants.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
