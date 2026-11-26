@@ -19,15 +19,17 @@
 <header class="top"><div class="brand"><span class="logo">🌿</span><b>Растениум</b></div><div id="quota" class="quota"></div></header>
 <main id="app" aria-live="polite"></main>
 <nav class="nav" id="nav">
-  <button data-go="home"><span>📷</span>Определить</button>
-  <button data-go="mine"><span>🪴</span>Мои растения<i id="badge" hidden></i></button>
-  <button data-go="about"><span>⚙️</span>Ещё</button>
+  <button data-go="home"><span>📷</span><em>Определить</em></button>
+  <button data-go="mine"><span>🪴</span><em>Мои растения</em><i id="badge" hidden></i></button>
+  <button data-go="grow"><span>🌱</span><em>Гровинг</em></button>
+  <button data-go="about"><span>⚙️</span><em>Ещё</em></button>
 </nav>
 <input id="fileCam" type="file" accept="image/*" capture="environment" hidden>
 <input id="fileGal" type="file" accept="image/*" hidden>
 <div id="toast" class="toast" hidden></div>
 <script src="config.js"></script>
 <script src="plants.js"></script>
+<script src="growing.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
