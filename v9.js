@@ -324,6 +324,7 @@ async function drawMap9(){
   if(!$('#rmap9')||S.view!=='rmap')return;el.innerHTML='';
   const g=geo9(),c=g?[g.lat,g.lon]:[55.75,37.62];
   const map=L.map(el,{zoomControl:true}).setView(c,g?12:4);S9.map=map;
+  if(map.attributionControl)map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
   if(g)L.circle(c,{radius:1500,color:'#2E7D4F',weight:1,fillOpacity:.06}).addTo(map);
   if(S9.st!=='on')return;
