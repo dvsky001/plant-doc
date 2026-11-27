@@ -480,6 +480,6 @@ function bind(){
 $('#fileCam').onchange=e=>{onPhoto(e.target.files[0]);e.target.value=''};
 $('#fileGal').onchange=e=>{onPhoto(e.target.files[0]);e.target.value=''};
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.go));
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;let re=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(re||!had)return;re=true;location.reload()});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{const chk=()=>{try{reg.update()}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});setInterval(chk,300000)}).catch(()=>{})});
 setNav();go('home');notifyDue();
 if(typeof window!=='undefined')window.__app={S,go,identify,matchDB,gIcs,growList,makePlan};
