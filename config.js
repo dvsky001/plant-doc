@@ -1,7 +1,7 @@
 // Конфигурация. Здесь НЕТ секретов: ключ Pl@ntNet предназначен для браузера и работает только
 // с доменов из списка «Authorized domains» в настройках ключа (my.plantnet.org → Settings → API key).
 window.PLANT_CONFIG={
-  PLANTNET_KEY:'',            // ← вставьте публичный ключ Pl@ntNet (пусто = демо-режим без распознавания по фото)
+  PLANTNET_KEY:'2b10APdRkymmsWUPOXVda20Bd',            // ← вставьте публичный ключ Pl@ntNet (пусто = демо-режим без распознавания по фото)
   PLANTNET_PROJECT:'all',
   PLANTNET_LANG:'ru',
   FREE_PER_DAY:3,             // бесплатных фото в день (счётчик в localStorage; жёсткий лимит — только через прокси/сервер)
