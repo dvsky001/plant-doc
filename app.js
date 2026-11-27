@@ -9,7 +9,7 @@ const today=()=>ymd(new Date());
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/864e5);
 const fmtDate=s=>new Date(s+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
-const APP_VER='8.0';
+const APP_VER='9.0';
 const USER_KEY_LS='plantarium.userKey';
 const devKey=()=>(C.PLANTNET_KEY||'').trim();
 const userKey=()=>{const v=LS.get(USER_KEY_LS,'');return (typeof v==='string'?v:'').trim()};
