@@ -57,3 +57,9 @@ ul.tick{list-style:none;padding:0}ul.tick li{padding:5px 0 5px 28px;position:rel
 details summary{cursor:pointer;font-weight:700}
 .nav em{font-style:normal}
 .nav button{font-size:11px}
+.wx{margin:8px 0}.wxr{display:grid;grid-template-columns:74px 24px 1fr 62px 58px;gap:4px;align-items:center;padding:6px 6px;border-bottom:1px solid var(--line);font-size:13px;border-radius:8px}
+.wxr b{font-size:12px}.wxr.fr{background:#E8F1FB}.wxr.ht{background:#FFEFE0}.wxr.rn{background:#E6F2F7}.wxr.wd{outline:1px dashed var(--amb)}
+.msr{display:grid;grid-template-columns:76px repeat(12,1fr);gap:2px;align-items:center;margin:4px 0;font-size:12px}
+.msr b{font-size:12px;font-weight:600}.msr i{font-style:normal;text-align:center;padding:4px 0;border-radius:4px;background:#EEF3EE;color:var(--mut);font-size:11px}
+.msr i.s{background:#8FCB9B;color:#0E3A1E}.msr i.p{background:#5FB27A;color:#fff}.msr i.h{background:#F2B544;color:#4A3000}.msr i.cur{outline:2px solid var(--g2)}
+.nav button[data-go=garden] em{font-size:10px;letter-spacing:-.2px;white-space:nowrap}
