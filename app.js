@@ -75,7 +75,9 @@ function matchDB(lat){
 async function identify(blob){
   const fd=new FormData();fd.append('organs','auto');fd.append('images',blob,'plant.jpg');
   const url=`https://my-api.plantnet.org/v2/identify/${encodeURIComponent(C.PLANTNET_PROJECT)}?api-key=${encodeURIComponent(C.PLANTNET_KEY)}&lang=${C.PLANTNET_LANG}&nb-results=5&include-related-images=false`;
-  let r;try{r=await fetch(url,{method:'POST',body:fd})}catch(e){throw{code:'net'}}
+  const ac=new AbortController();
+  const to=setTimeout(()=>ac.abort(),20000);
+  let r;try{r=await fetch(url,{method:'POST',body:fd,signal:ac.signal})}catch(e){throw{code:'net'}}finally{clearTimeout(to)}
   if(!r.ok)throw{code:r.status};
   const j=await r.json();
   return (j.results||[]).map(x=>{
