@@ -9,7 +9,12 @@ const today=()=>ymd(new Date());
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/864e5);
 const fmtDate=s=>new Date(s+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
-const DEMO=!C.PLANTNET_KEY;
+const APP_VER='6.0';
+const USER_KEY_LS='plantarium.userKey';
+const devKey=()=>(C.PLANTNET_KEY||'').trim();
+const userKey=()=>{const v=LS.get(USER_KEY_LS,'');return (typeof v==='string'?v:'').trim()};
+const demo=()=>!(devKey()||userKey());
+function maskKey(k){k=(k||'');return k?('••••'+k.slice(-4)):''}
 
 /* ---------- регион, сезоны, язык ---------- */
 const RGL=()=>Object.assign({r:'ru',hem:'N',lang:'ru'},LS.get('pd_region',{}));
@@ -72,14 +77,10 @@ function matchDB(lat){
   p=PLANTS.find(p=>p.lat.toLowerCase().split(' ')[0]===gen||p.g.some(x=>x.toLowerCase()===gen)||p.syn.some(s=>s.toLowerCase().split(' ')[0]===gen));
   return p?{p,genusOnly:true}:{p:null};
 }
-async function identify(blob){
-  const fd=new FormData();fd.append('organs','auto');fd.append('images',blob,'plant.jpg');
-  const url=`https://my-api.plantnet.org/v2/identify/${encodeURIComponent(C.PLANTNET_PROJECT)}?api-key=${encodeURIComponent(C.PLANTNET_KEY)}&lang=${C.PLANTNET_LANG}&nb-results=5&include-related-images=false`;
-  const ac=new AbortController();
-  const to=setTimeout(()=>ac.abort(),20000);
-  let r;try{r=await fetch(url,{method:'POST',body:fd,signal:ac.signal})}catch(e){throw{code:'net'}}finally{clearTimeout(to)}
-  if(!r.ok)throw{code:r.status};
-  const j=await r.json();
+function plantnetUrl(key){
+  return `https://my-api.plantnet.org/v2/identify/${encodeURIComponent(C.PLANTNET_PROJECT)}?api-key=${encodeURIComponent(key)}&lang=${C.PLANTNET_LANG}&nb-results=5&include-related-images=false`;
+}
+function mapIdentify(j){
   return (j.results||[]).map(x=>{
     const sp=x.species||{},lat=sp.scientificNameWithoutAuthor||'';
     const m=matchDB(lat);
@@ -87,11 +88,30 @@ async function identify(blob){
     return{score:x.score||0,lat,fam:sp.family&&sp.family.scientificNameWithoutAuthor,ru:m.p&&!m.genusOnly?m.p.n:(ruName?cap(ruName):null),db:m.p,genusOnly:!!m.genusOnly};
   });
 }
+async function identifyWith(blob,key){
+  const fd=new FormData();fd.append('organs','auto');fd.append('images',blob,'plant.jpg');
+  const ac=new AbortController();
+  const to=setTimeout(()=>ac.abort(),20000);
+  let r;try{r=await fetch(plantnetUrl(key),{method:'POST',body:fd,signal:ac.signal})}catch(e){throw{code:'net'}}finally{clearTimeout(to)}
+  if(!r.ok)throw{code:r.status};
+  return mapIdentify(await r.json());
+}
+async function identify(blob){
+  const dev=devKey(),user=userKey();
+  const primary=dev||user;
+  if(!primary)throw{code:'nokey'};
+  try{return await identifyWith(blob,primary)}
+  catch(e){
+    if(dev&&user&&user!==dev&&(e.code===429||e.code===401||e.code===403))return await identifyWith(blob,user);
+    throw e;
+  }
+}
 function errText(c){
   if(c==='net')return'Нет связи с сервисом распознавания. Проверьте интернет.';
   if(c===404)return'Растение на фото не найдено. Снимите лист или цветок крупнее и при свете.';
   if(c===429)return'Дневной лимит распознавания сервиса исчерпан. Подберите растение вручную — или попробуйте завтра.';
   if(c===401||c===403)return'Сервис отклонил ключ (проверьте ключ и список разрешённых доменов). Подберите вручную.';
+  if(c==='nokey')return'Нет ключа распознавания. Добавьте свой ключ Pl@ntNet в разделе «Ещё» — или подберите растение вручную.';
   return'Сервис распознавания временно недоступен ('+c+'). Подберите вручную.';
 }
 async function onPhoto(file){
@@ -100,7 +120,7 @@ async function onPhoto(file){
   try{S.photo=await prepare(file)}catch(e){toast('Не удалось открыть фото');return}
   S.tr={};S.ans={};S.pick=null;S.plan=null;S.msg='';S.q='';S.cands=[];
   useShot();
-  if(DEMO){S.mode='demo';go('clarify');return}
+  if(demo()){S.mode='demo';go('clarify');return}
   S.mode='api';go('loading');
   try{
     S.cands=await identify(S.photo.blob);
@@ -262,7 +282,7 @@ const harvestLine=(v,el)=>el<v.harvest.min?`до первого сбора ≈ $
 const taskRow=(t,pid,withBtn)=>`<div class="rem"><div class="ic">${t.ic}</div><div class="tx"><b>${esc(t.t)}</b><span>${t.fut?'':''}${fmtDate(t.date)} · ${esc(t.x)}</span></div>${withBtn?`<button class="btn sm" data-gdone="${pid}|${t.key}|${t.k==null?'':t.k}">✓</button>`:''}</div>`;
 
 /* ---------- экраны ---------- */
-const demoBanner=()=>DEMO?`<div class="banner"><b>Демо-режим.</b> Распознавание по фото пока не подключено (ждёт бесплатный ключ Pl@ntNet), поэтому фото <b>не анализируется</b>: выберите растение из встроенной базы по признакам или названию. Дальше всё работает по-настоящему.</div>`:'';
+const demoBanner=()=>demo()?`<div class="banner"><b>Демо-режим.</b> Распознавание по фото не подключено. Добавьте свой ключ Pl@ntNet в разделе «Ещё» — или выберите растение из базы по признакам. Дальше всё работает по-настоящему.</div>`:'';
 const V={};
 V.home=()=>{
   const due=dueCount();
@@ -275,7 +295,7 @@ V.home=()=>{
   ${due?`<div class="banner red"><b>💧 Пора поливать: ${due}.</b> <a href="#" data-go="mine">Открыть «Мои растения»</a></div>`:''}
   <p class="small">${rg().cfg.flag} Регион: <b>${esc(rg().cfg.n)}</b> · <a href="#" data-go="about">изменить</a></p>
   <p class="mut">Советы для лучшего результата: снимайте один цветок или крупно лист, при дневном свете, без бликов.</p>
-  <p class="small">Без рекламы. Фото обрабатывается на телефоне; ${DEMO?'в демо-режиме никуда не отправляется.':'для распознавания отправляется в сервис Pl@ntNet и не сохраняется у нас.'}</p>`;
+  <p class="small">Без рекламы. Фото обрабатывается на телефоне; ${demo()?'в демо-режиме никуда не отправляется.':'для распознавания отправляется в сервис Pl@ntNet и не сохраняется у нас.'}</p>`;
 };
 V.loading=()=>`<img class="photo" src="${S.photo.url}" alt="Ваше фото"><div class="spin"></div><p style="text-align:center"><b>Определяем растение…</b></p>`;
 V.clarify=()=>{
@@ -300,7 +320,7 @@ V.result=()=>{
   const toxCls=p.tox==null?'tn':'t'+p.tox,toxLbl=p.tox==null?'Нет данных':['Безопасно для питомцев','Слабо токсично','Токсично'][p.tox];
   const ch=(k,opts)=>opts.map(([v,l])=>`<button class="chip ${a[k]===v?'on':''}" data-an="${k}" data-v="${v}">${l}</button>`).join('');
   return `${S.photo?`<img class="photo" src="${S.photo.url}" alt="Ваше фото">`:''}
-  ${pk.manual&&DEMO&&S.photo?'<div class="banner">Демо: название выбрано вами, а не определено по фото.</div>':''}
+  ${pk.manual&&demo()&&S.photo?'<div class="banner">Демо: название выбрано вами, а не определено по фото.</div>':''}
   <div class="names"><div class="ru">${esc(pk.ru)}</div><div class="lat">${esc(pk.lat)}${p.fam?' · '+esc(p.fam):''}</div>${conf}${pk.genusOnly?'<span class="conf low">Вид близкий — уход как для рода</span>':''}</div>
   ${p.generic?`<div class="banner">${esc(p.tip)}</div>`:''}
   <h2>Параметры ухода</h2>
@@ -373,11 +393,18 @@ V.about=()=>`<h1>Растениум</h1>
   <p class="mut">${esc(rg().cfg.climate)}</p>
   <ul class="tick"><li>Сезоны: тёплый — ${rg().warm.length?MONTHS[rg().warm[0]]+'…':'—'}; отопительный: ${rg().heat.length?'учитывается':'нет'}</li><li>Календарь «Гровинг»: сроки старта и поправка на тёмный сезон</li><li>Магазины: ${rg().shops.map(s=>s.name).join(', ')}</li><li>Валюта подписки: ${rg().cfg.cur}</li></ul>
   <p class="small">Список растений и культур от региона не зависит. Перевод на казахский и английский пока частичный (меню и главный экран), остальное на русском.</p></div>
- <div class="card"><h3>Режим</h3><p>${DEMO?'🟡 <b>Демо</b>: распознавание по фото не подключено (нужен ключ Pl@ntNet). Работают подбор по признакам, база из '+PLANTS.length+' растений, план и напоминания.':'🟢 Распознавание по фото: Pl@ntNet. База ухода: '+PLANTS.length+' растений.'}</p></div>
+ <div class="card" id="keyCard"><h3>Свой ключ Pl@ntNet</h3>
+  <p class="mut">Запасной вариант: ваши 500 распознаваний в день, если общий ключ недоступен или кончился лимит. Ключ хранится только на этом устройстве и уходит лишь в сервис Pl@ntNet.</p>
+  <p class="small">Зарегистрируйтесь на <a href="https://my.plantnet.org" target="_blank" rel="noopener">my.plantnet.org</a>, создайте API key, в Authorized domains добавьте <b>dvsky001.github.io</b> и вставьте ключ сюда.</p>
+  ${userKey()?`<p>Сохранён: <b id="keyMask">${esc(maskKey(userKey()))}</b></p>`:'<p class="mut">Ключ не сохранён.</p>'}
+  <input type="password" id="userKeyIn" autocomplete="off" spellcheck="false" placeholder="Вставьте ключ">
+  <button class="btn sm" id="bKeySave">Сохранить</button>${userKey()?'<button class="btn sm danger" id="bKeyDel">Удалить</button>':''}</div>
+ <div class="card"><h3>Режим</h3><p>${demo()?'🟡 <b>Демо</b>: распознавание по фото не подключено (добавьте ключ ниже или дождитесь общего). Работают подбор по признакам, база из '+PLANTS.length+' растений, план и напоминания.':'🟢 Распознавание по фото: Pl@ntNet. База ухода: '+PLANTS.length+' растений.'}</p></div>
  <div class="card"><h3>Как это работает</h3><ul class="tick"><li>Фото → название (русское и латинское)</li><li>Низкая уверенность → уточняющие вопросы</li><li>Параметры, токсичность, стадия → план ухода</li><li>Напоминания о поливе: приложение, уведомление, календарь</li></ul></div>
  <div class="card"><h3>Подписка</h3><p class="mut">${isPrem()?'Включён тестовый премиум.':`Бесплатно: ${C.FREE_PER_DAY} фото в день.`}</p><button class="btn sm sec" data-go="paywall">Показать экран подписки</button></div>
  <div class="card"><h3>Тестирование</h3><button class="btn sm sec" id="bReset">Сбросить дневной лимит</button><button class="btn sm sec" id="bPrem">${isPrem()?'Выключить':'Включить'} тестовый премиум</button><button class="btn sm danger" id="bWipe">Стереть все данные</button></div>
- <p class="small">Данные растений: общедоступные справочники комнатного цветоводства и списки токсичности ASPCA. Распознавание: Pl@ntNet (my.plantnet.org). Приложение — прототип.</p>`;
+ <p class="small">Данные растений: общедоступные справочники комнатного цветоводства и списки токсичности ASPCA. Распознавание: Pl@ntNet (my.plantnet.org). Приложение — прототип.</p>
+ <p class="small">Версия ${APP_VER}</p>`;
 
 
 V.grow=()=>{
@@ -461,6 +488,9 @@ function bind(){
   on('#bReset',()=>{LS.set('pd_quota',{d:today(),n:0});drawQuota();toast('Лимит сброшен')});
   on('#bPrem',()=>{LS.set('pd_prem',!isPrem());go('about')});
   on('#bWipe',()=>{if(confirm('Стереть все растения и настройки на этом устройстве?')){localStorage.clear();S.photo=null;go('home')}});
+  on('#bKeySave',()=>{const raw=($('#userKeyIn')&&$('#userKeyIn').value||'').trim();if(raw.length<8){toast('Ключ слишком короткий');return}LS.set(USER_KEY_LS,raw);if($('#userKeyIn'))$('#userKeyIn').value='';toast('Ключ сохранён на этом устройстве');go('about')});
+  on('#bKeyDel',()=>{if(!userKey())return;if(!confirm('Удалить свой ключ с этого устройства?'))return;try{localStorage.removeItem(USER_KEY_LS)}catch(e){}toast('Ключ удалён');go('about')});
+
 
   document.querySelectorAll('[data-rg]').forEach(b=>b.onclick=()=>{const s=RGL();s.r=b.dataset.rg;LS.set('pd_region',s);setNav();render()});
   document.querySelectorAll('[data-hem]').forEach(b=>b.onclick=()=>{const s=RGL();s.hem=b.dataset.hem;LS.set('pd_region',s);render()});
