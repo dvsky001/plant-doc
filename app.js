@@ -9,7 +9,7 @@ const today=()=>ymd(new Date());
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/864e5);
 const fmtDate=s=>new Date(s+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
-const APP_VER='7.0';
+const APP_VER='8.0';
 const USER_KEY_LS='plantarium.userKey';
 const devKey=()=>(C.PLANTNET_KEY||'').trim();
 const userKey=()=>{const v=LS.get(USER_KEY_LS,'');return (typeof v==='string'?v:'').trim()};
@@ -25,9 +25,9 @@ function rg(){const s=RGL(),cfg=C.REGIONS[s.r]||C.REGIONS.ru;const sh=m=>s.hem==
 const isWarm=m=>rg().warm.includes(m),isHeat=m=>rg().heat.includes(m),isDark=m=>rg().dark.includes(m);
 const MONTHS=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 const T={
- ru:{nav_id:'Определить',nav_mine:'Мои растения',nav_grow:'Гровинг',nav_more:'Ещё',nav_garden:'Бать, копать!',hero_h:'Что это за растение?',hero_p:'Сфотографируйте цветок или лист — подскажем название, стадию, как ухаживать и поливать, и безопасно ли для кошек и собак.',b_cam:'📷 Сфотографировать',b_gal:'🖼 Выбрать из галереи',b_man:'🔎 Подобрать вручную (без фото)',q_left:'Фото сегодня: {l} из {n}',q_zero:'Лимит на сегодня исчерпан',prem:'Премиум ∞'},
- kk:{nav_id:'Анықтау',nav_mine:'Менің өсімдіктерім',nav_grow:'Өсіру',nav_garden:'Бать, копать!',nav_more:'Тағы',hero_h:'Бұл қандай өсімдік?',hero_p:'Гүлді немесе жапырақты суретке түсіріңіз — атауын, күтімін, суаруын және мысықтар мен иттерге қауіпсіздігін айтамыз.',b_cam:'📷 Суретке түсіру',b_gal:'🖼 Галереядан таңдау',b_man:'🔎 Қолмен таңдау (суретсіз)',q_left:'Бүгінгі фото: {l} / {n}',q_zero:'Бүгінгі лимит таусылды',prem:'Премиум ∞'},
- en:{nav_id:'Identify',nav_mine:'My plants',nav_grow:'Growing',nav_garden:'Бать, копать!',nav_more:'More',hero_h:'What plant is this?',hero_p:'Take a photo of a flower or leaf — we will tell you its name, how to water and care for it, and whether it is safe for cats and dogs.',b_cam:'📷 Take a photo',b_gal:'🖼 Choose from gallery',b_man:'🔎 Pick manually (no photo)',q_left:'Photos today: {l} of {n}',q_zero:'Daily limit reached',prem:'Premium ∞'}
+ ru:{nav_id:'Определить',nav_mine:'Мои растения',nav_grow:'Гровинг',nav_more:'Ещё',nav_garden:'Бать, копать!',nav_today:'Сегодня',hero_h:'Что это за растение?',hero_p:'Сфотографируйте цветок или лист — подскажем название, стадию, как ухаживать и поливать, и безопасно ли для кошек и собак.',b_cam:'📷 Сфотографировать',b_gal:'🖼 Выбрать из галереи',b_man:'🔎 Подобрать вручную (без фото)',q_left:'Фото сегодня: {l} из {n}',q_zero:'Лимит на сегодня исчерпан',prem:'Премиум ∞'},
+ kk:{nav_id:'Анықтау',nav_mine:'Менің өсімдіктерім',nav_grow:'Өсіру',nav_garden:'Бать, копать!',nav_today:'Бүгін',nav_more:'Тағы',hero_h:'Бұл қандай өсімдік?',hero_p:'Гүлді немесе жапырақты суретке түсіріңіз — атауын, күтімін, суаруын және мысықтар мен иттерге қауіпсіздігін айтамыз.',b_cam:'📷 Суретке түсіру',b_gal:'🖼 Галереядан таңдау',b_man:'🔎 Қолмен таңдау (суретсіз)',q_left:'Бүгінгі фото: {l} / {n}',q_zero:'Бүгінгі лимит таусылды',prem:'Премиум ∞'},
+ en:{nav_id:'Identify',nav_mine:'My plants',nav_grow:'Growing',nav_garden:'Бать, копать!',nav_today:'Today',nav_more:'More',hero_h:'What plant is this?',hero_p:'Take a photo of a flower or leaf — we will tell you its name, how to water and care for it, and whether it is safe for cats and dogs.',b_cam:'📷 Take a photo',b_gal:'🖼 Choose from gallery',b_man:'🔎 Pick manually (no photo)',q_left:'Photos today: {l} of {n}',q_zero:'Daily limit reached',prem:'Premium ∞'}
 };
 const t=(k,o)=>{let s=(T[rg().lang]||T.ru)[k]||T.ru[k]||k;if(o)for(const x in o)s=s.replace('{'+x+'}',o[x]);return s};
 // запросы для магазинов на английском (для «другого региона» с английским языком)
@@ -46,7 +46,7 @@ function drawQuota(){const el=$('#quota');if(isPrem()){el.textContent=t('prem');
 
 /* ---------- состояние ---------- */
 const S={view:'home',photo:null,mode:null,cands:[],pick:null,tr:{},ans:{},msg:'',plan:null,q:'',gq:'',dq:'',wxs:'idle',wx:null,wxe:''};
-function setNav(){const m={home:'nav_id',mine:'nav_mine',grow:'nav_grow',garden:'nav_garden',about:'nav_more'};document.querySelectorAll('#nav button').forEach(b=>{b.querySelector('em').textContent=t(m[b.dataset.go])})}
+function setNav(){const m={home:'nav_id',mine:'nav_mine',grow:'nav_grow',garden:'nav_garden',today:'nav_today',about:'nav_more'};document.querySelectorAll('#nav button').forEach(b=>{b.querySelector('em').textContent=t(m[b.dataset.go])})}
 function go(v){S.view=v;render();window.scrollTo(0,0);document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===(['mine','about'].includes(v)?v:['grow','gcrop','gproj'].includes(v)?'grow':['garden','gdn'].includes(v)?'garden':'home')));if(['garden','gdn','mine'].includes(v))loadWx(false)}
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,3200)}
 
@@ -197,7 +197,7 @@ function makePlan(p,a){
 /* ---------- напоминания ---------- */
 const mineList=()=>LS.get('pd_mine',[]);
 const saveMine=l=>{LS.set('pd_mine',l);drawBadge()};
-function dueCount(){const l=mineList();return l.filter(x=>diffDays(x.next.water,today())<=0).length+growDue()}
+function dueCount(){const l=mineList();return l.filter(x=>(typeof mineVis!=='function'||mineVis(x))&&diffDays(x.next.water,today())<=0).length+growDue()}
 function drawBadge(){const n=dueCount(),b=$('#badge');b.hidden=!n;b.textContent=n}
 function savePlan(name){
   const pl=S.plan,l=mineList();const w=pl.rem.find(r=>r.k==='water'),f=pl.rem.find(r=>r.k==='feed');
@@ -287,7 +287,7 @@ const taskRow=(t,pid,withBtn)=>`<div class="rem"><div class="ic">${t.ic}</div><d
 const V={};
 /* ---------- Огород: погода (Open-Meteo, без ключа) ---------- */
 const GEO_LS='pd_geo',WX_LS='pd_wx',WX_TTL=30*60*1000,WX_TIMEOUT=10000;
-const geo=()=>{const g=LS.get(GEO_LS,null);return g&&isFinite(g.lat)&&isFinite(g.lon)?g:null};
+const geo=()=>{if(typeof wxOn==='function'&&!wxOn())return null;const g=LS.get(GEO_LS,null);return g&&isFinite(g.lat)&&isFinite(g.lon)?g:null};
 function parseCoord(s,max){const v=parseFloat(String(s==null?'':s).trim().replace(',','.'));return isFinite(v)&&Math.abs(v)<=max?v:null}
 const wxIcon=c=>c==null?'·':c===0?'☀️':c<=2?'🌤':c===3?'☁️':(c===45||c===48)?'🌫':(c>=51&&c<=57)?'🌦':(c>=61&&c<=67)||(c>=80&&c<=82)?'🌧':(c>=71&&c<=77)||c===85||c===86?'❄️':c>=95?'⛈':'☁️';
 function wxErrText(c){
@@ -322,7 +322,7 @@ async function loadWx(force){
 function refreshWx(){
   const a=$('#wxBox');if(a){a.innerHTML=wxBoxHtml();bind()}
   const b=$('#gdnWx');if(b){b.innerHTML=gdnWxHtml();bind()}
-  if(S.view==='mine'){const y=window.scrollY;render();window.scrollTo(0,y)}
+  if(['mine','today','shop'].includes(S.view)){const y=window.scrollY;render();window.scrollTo(0,y)}
 }
 const wxDay=(d,i)=>new Date(d.time[i]+'T12:00:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'});
 // Правила подсказок. prof: {fr:'t'|'m'|'h', sh, tall, bl:[месяцы], gen}
@@ -343,9 +343,10 @@ function wxAlerts(prof){
   if(wi>=0)out.push({k:'wind',x:'💨 '+wxDay(d,wi)+': ветер до '+Math.round(wm)+' м/с — '+(prof.tall||prof.gen?'подвяжите высокие растения к опорам и ':'')+'укройте рассаду и молодые посадки, проверьте укрытия.'});
   return out;
 }
-const wxAlertsHtml=(al)=>al===null?'':al.length?al.map(a=>`<div class="banner ${a.k==='frost'||a.k==='heat'?'red':''}" style="margin:6px 0">${esc(a.x)}</div>`).join(''):'<div class="banner green" style="margin:6px 0">✅ На ближайшие 7 дней опасной для растений погоды не ожидается.</div>';
+const wxChip=a=>{const m=a.x.match(/(-?\d+(?:\.\d+)?) (°C|мм|м\/с)/),day=a.x.split(':')[0];return `<button class="alchip ${a.k}" data-k="${a.k}" data-al="${esc(a.x)}">${esc(day)}${m?' · '+esc(m[1]+' '+m[2]):''}</button>`};
+const wxAlertsHtml=(al)=>al===null?'':al.length?'<div class="alc">'+al.map(wxChip).join('')+'</div>':'<div class="alc"><span class="alchip ok">✅ Без угроз на 7 дней</span></div>';
 function wxBoxHtml(){
-  const g=geo();if(!g)return'<p class="mut">Введите координаты или нажмите «Моё место» — покажем прогноз на 7 дней и подсказки по уходу.</p>';
+  const g=geo();if(!g)return'';
   let h=`<p class="mut">📍 ${g.lat.toFixed(2)}, ${g.lon.toFixed(2)}</p>`;
   if(S.wxs==='load'&&!(S.wx&&sameGeo(S.wx,g)))h+='<p class="mut">Загружаю прогноз…</p><div class="spin" style="width:30px;height:30px;border-width:4px;margin:10px auto"></div>';
   if(S.wxs==='err')h+=`<div class="banner red" id="wxErr">${esc(S.wxe)} <button class="btn sm sec" id="bWxRetry">Повторить</button></div>`;
@@ -353,14 +354,14 @@ function wxBoxHtml(){
     h+='<div class="wx">'+d.time.map((_,i)=>{const cls=(d.tmin[i]!=null&&d.tmin[i]<=2?' fr':'')+(d.tmax[i]!=null&&d.tmax[i]>=30?' ht':'')+(d.pr[i]!=null&&d.pr[i]>=5?' rn':'')+(d.wind[i]!=null&&d.wind[i]>=10?' wd':'');
       const f=x=>x==null?'—':Math.round(x);
       return `<div class="wxr${cls}"><b>${esc(wxDay(d,i))}</b><span>${wxIcon(d.code[i])}</span><span>${f(d.tmin[i])}…${f(d.tmax[i])} °C</span><span>💧 ${d.pr[i]==null?'—':Math.round(d.pr[i]*10)/10} мм</span><span>💨 ${f(d.wind[i])} м/с</span></div>`}).join('')+'</div>';
-    h+='<h3 style="margin-top:12px">Подсказки для огорода</h3>'+wxAlertsHtml(wxAlerts({fr:'t',gen:true}));
+    h+=wxAlertsHtml(wxAlerts({fr:'t',gen:true}));
     h+=`<p class="small">Обновлено: ${new Date(S.wx.t).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}. Пороги: заморозок ≤ 2 °C, дождь ≥ 5 мм, жара ≥ 30 °C, ветер ≥ 10 м/с.</p>`;
   }
   return h;
 }
 function setGeo(lat,lon){
   lat=Math.round(lat*1e4)/1e4;lon=Math.round(lon*1e4)/1e4;
-  LS.set(GEO_LS,{lat,lon,t:Date.now()});S.latIn=undefined;S.lonIn=undefined;S.wx=null;S.wxs='idle';
+  LS.set(GEO_LS,{lat,lon,t:Date.now()});if(typeof syncGeo8==='function')syncGeo8();S.latIn=undefined;S.lonIn=undefined;S.wx=null;S.wxs='idle';
   if(S.view==='garden')render();
   loadWx(true);
 }
@@ -394,7 +395,7 @@ function growBody(q){
 const gProf=g=>({fr:g.fr,sh:g.sh,tall:g.tall,bl:g.bl});
 function gdnWxHtml(){
   const g=GARDEN.find(x=>x.id===S.gd);if(!g)return'';
-  if(!geo())return'<p class="mut">Укажите место на вкладке «Бать, копать!» — подскажем по прогнозу, когда укрывать, поливать и подвязывать.</p><button class="btn sm sec" data-go="garden">🌦 Указать место</button>';
+  if(!geo())return wxOn()?'<button class="btn sm sec" data-go="garden">🌦 Указать место</button>':'';
   if(S.wxs==='load'&&!S.wx)return'<p class="mut">Загружаю прогноз…</p>';
   if(S.wxs==='err'&&!(S.wx&&sameGeo(S.wx,geo())))return`<div class="banner red">${esc(S.wxe)}</div>`;
   return wxAlertsHtml(wxAlerts(gProf(g)));
@@ -403,8 +404,8 @@ const frLbl={t:'Боится заморозков: высаживают посл
 function mRow(lbl,arr,cls){if(!arr.length)return'';const a=hemM(arr),cur=new Date().getMonth()+1;return `<div class="msr"><b>${lbl}</b>${MSH.map((m,i)=>`<i class="${a.includes(i+1)?cls:''}${i+1===cur?' cur':''}">${m[0]}</i>`).join('')}</div>`}
 V.garden=()=>{
   const g0=geo();
-  return `<section class="hero"><h1>🥕 Бать, копать!</h1><p>Прогноз погоды по вашим координатам с подсказками по уходу и каталог из ${GARDEN.length} огородных и садовых культур.</p></section>
-  <div class="card"><h3>🌦 Погода на 7 дней</h3>
+  return `<section class="hero"><h1>🥕 Бать, копать!</h1><p>Каталог из ${GARDEN.length} культур и инструменты огородника.</p></section>
+  <div class="card" id="wxCard"><h3>🌦 Погода на 7 дней</h3>
    <div class="row"><input type="text" inputmode="decimal" id="geoLat" autocomplete="off" placeholder="Широта, напр. 43.12" value="${esc(S.latIn!==undefined?S.latIn:(g0?g0.lat:''))}"><input type="text" inputmode="decimal" id="geoLon" autocomplete="off" placeholder="Долгота, напр. 131.89" value="${esc(S.lonIn!==undefined?S.lonIn:(g0?g0.lon:''))}"></div>
    <button class="btn sm" id="bGeoSet">Показать прогноз</button><button class="btn sm sec" id="bGeoMe">📍 Моё место</button>
    <div id="wxBox">${wxBoxHtml()}</div>
@@ -436,13 +437,13 @@ V.gdn=()=>{
 };
 function addGarden(g){
   const l=mineList();
-  l.push({id:Date.now(),name:g.n,lat:g.lat,thumb:'',added:today(),stage:'Огород',gid:g.id,outdoor:true,every:{water:g.wi,feed:g.fi},next:{water:addDays(today(),g.wi),feed:g.fi?addDays(today(),g.fi):null}});
+  l.push({id:Date.now(),name:g.n,lat:g.lat,thumb:'',added:today(),stage:'Огород',gid:g.id,outdoor:true,gdn:(typeof curG==='function'?curG().id:undefined),every:{water:g.wi,feed:g.fi},next:{water:addDays(today(),g.wi),feed:g.fi?addDays(today(),g.fi):null}});
   saveMine(l);toast('Добавлено в «Мои растения»: напомним о поливе');
 }
 function mineProf(x){const g=x.gid&&GARDEN.find(y=>y.id===x.gid);return g?gProf(g):{fr:'t',sh:false,tall:false}}
 
 /* ---------- экраны ---------- */
-const demoBanner=()=>demo()?`<div class="banner"><b>Демо-режим.</b> Распознавание по фото не подключено. Добавьте свой ключ Pl@ntNet в разделе «Ещё» — или выберите растение из базы по признакам. Дальше всё работает по-настоящему.</div>`:'';
+const demoBanner=()=>'';
 V.home=()=>{
   const due=dueCount();
   return `<section class="hero"><h1>${t('hero_h')}</h1><p>${t('hero_p')}</p></section>
@@ -451,9 +452,7 @@ V.home=()=>{
   <button class="btn sec" id="bGal">${t('b_gal')}</button>
   <button class="btn ghost" id="bMan">${t('b_man')}</button>
   <button class="btn sec" data-go="grow">🌱 ${t('nav_grow')}: клубника, микрозелень, помидоры черри</button>
-  ${due?`<div class="banner red"><b>💧 Пора поливать: ${due}.</b> <a href="#" data-go="mine">Открыть «Мои растения»</a></div>`:''}
   <p class="small">${rg().cfg.flag} Регион: <b>${esc(rg().cfg.n)}</b> · <a href="#" data-go="about">изменить</a></p>
-  <p class="mut">Советы для лучшего результата: снимайте один цветок или крупно лист, при дневном свете, без бликов.</p>
   <p class="small">Без рекламы. Фото обрабатывается на телефоне; ${demo()?'в демо-режиме никуда не отправляется.':'для распознавания отправляется в сервис Pl@ntNet и не сохраняется у нас.'}</p>`;
 };
 V.loading=()=>`<img class="photo" src="${S.photo.url}" alt="Ваше фото"><div class="spin"></div><p style="text-align:center"><b>Определяем растение…</b></p>`;
@@ -527,7 +526,7 @@ V.plan=()=>{
   <p class="small">Справочная информация, не ветеринарная и не ботаническая консультация. При отравлении питомца обращайтесь к ветеринару.</p>`;
 };
 V.mine=()=>{
-  const l=mineList();
+  const l=mineList().filter(x=>typeof mineVis!=='function'||mineVis(x));
   if(!l.length)return `<h1>Мои растения</h1><div class="card" style="text-align:center"><div style="font-size:48px">🪴</div><p>Пока пусто. Определите растение и сохраните план — здесь появятся напоминания о поливе.</p><button class="btn" data-go="home">📷 Определить растение</button></div>`;
   return `<h1>Мои растения</h1>`+l.sort((a,b)=>a.next.water.localeCompare(b.next.water)).map(x=>{
     const d=diffDays(x.next.water,today());
@@ -537,7 +536,7 @@ V.mine=()=>{
     return `<div class="card"><div class="mine">${gE?`<div style="font-size:40px;width:64px;text-align:center">${gE.e}</div>`:x.thumb?`<img src="${x.thumb}" alt="">`:'<img alt="">'}<div style="flex:1"><h3>${esc(x.name)}${x.outdoor?' <span class="conf" style="margin:0">🌳 огород</span>':''}</h3><div class="mut"><i>${esc(x.lat)}</i> · ${esc(x.stage||'')}</div>
     <div>💧 ${d<=0?`<span class="due">Полить ${d<0?'(просрочено на '+(-d)+' дн.)':'сегодня'}</span>`:`<span class="okc">через ${d} дн.</span> (${fmtDate(x.next.water)})`}</div>
     ${fd!=null?`<div class="mut">🧪 подкормка: ${fd<=0?'<b>пора</b>':'через '+fd+' дн.'}</div>`:''}</div></div>
-    <button class="btn sm" data-wat="${x.id}">💧 Полито</button>${fd!=null&&fd<=0?`<button class="btn sm sec" data-fed="${x.id}">🧪 Подкормлено</button>`:''}${x.gid?'':`<button class="btn sm sec" data-out="${x.id}">${x.outdoor?'🏠 Дома':'🌳 На улице'}</button>`}<button class="btn sm danger" data-del="${x.id}">Удалить</button>${x.outdoor?(geo()?(S.wxs==='load'&&!S.wx?'<p class="mut">Загружаю прогноз…</p>':(al===null&&S.wxs==='err'?`<div class="banner red">${esc(S.wxe)}</div>`:wxAlertsHtml(al))):'<p class="mut">🌦 Укажите место на вкладке «Бать, копать!» — подскажем по погоде, когда укрывать и поливать.</p>'):''}</div>`}).join('');
+    <button class="btn sm" data-wat="${x.id}">💧 Полито</button>${fd!=null&&fd<=0?`<button class="btn sm sec" data-fed="${x.id}">🧪 Подкормлено</button>`:''}${x.gid?'':`<button class="btn sm sec" data-out="${x.id}">${x.outdoor?'🏠 Дома':'🌳 На улице'}</button>`}<button class="btn sm danger" data-del="${x.id}">Удалить</button>${x.outdoor?(geo()?(S.wxs==='load'&&!S.wx?'<p class="mut">Загружаю прогноз…</p>':(al===null&&S.wxs==='err'?`<div class="banner red">${esc(S.wxe)}</div>`:wxAlertsHtml(al))):''):''}</div>`}).join('');
 };
 V.paywall=()=>`<section class="hero"><h1>Бесплатные фото на сегодня закончились</h1><p>${C.FREE_PER_DAY} фото в день — бесплатно. Завтра лимит обновится, а с подпиской фото без ограничений.</p></section>
  <div class="banner"><b>Заглушка:</b> оплата не подключена, тарифы ниже — пример оформления.</div>
